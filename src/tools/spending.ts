@@ -22,16 +22,20 @@ export function registerSpendingTools(
     "Költségek listázása szűrőkkel",
     {
       page: z.number().default(1).describe("Oldalszám"),
-      per_page: z.number().default(25).describe("Elemek száma oldalanként"),
-      spending_date_from: z.string().optional().describe("Kezdő dátum (YYYY-MM-DD)"),
-      spending_date_to: z.string().optional().describe("Vég dátum (YYYY-MM-DD)"),
-      payment_status: z.enum(["paid", "outstanding", "expired"]).optional().describe("Fizetési státusz"),
-      category: z.string().optional().describe("Kategória szűrő"),
+      per_page: z.number().min(1).max(100).default(25).describe("Elemek száma oldalanként (max. 100)"),
+      spending_date: z.enum(["invoice_date", "fulfillment_date", "due_date"]).optional().describe("Melyik dátumra szűrjön a start_date/end_date (alapértelmezés a Billingo szerint)"),
+      start_date: z.string().optional().describe("Kezdő dátum (YYYY-MM-DD)"),
+      end_date: z.string().optional().describe("Vég dátum (YYYY-MM-DD)"),
+      payment_status: z.enum(["all", "paid", "unpaid"]).optional().describe("Fizetési státusz"),
+      spending_type: z.string().optional().describe("Forrás szűrő (pl. manual)"),
+      categories: z.string().optional().describe("Kategória szűrő (pl. overheads)"),
+      currencies: z.string().optional().describe("Pénznem szűrő (pl. HUF)"),
+      payment_methods: z.string().optional().describe("Fizetési mód szűrő (pl. cash)"),
       q: z.string().optional().describe("Keresés"),
     },
     { title: "List Spending", readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async (params: Record<string, unknown>) => {
-      const result = await client.get("/spending", params as Record<string, string | number | boolean | undefined>);
+      const result = await client.get("/spendings", params as Record<string, string | number | boolean | undefined>);
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     },
   );
@@ -44,7 +48,7 @@ export function registerSpendingTools(
     },
     { title: "Get Spending", readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async ({ spending_id }: { spending_id: number }) => {
-      const result = await client.get(`/spending/${spending_id}`);
+      const result = await client.get(`/spendings/${spending_id}`);
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     },
   );
@@ -67,7 +71,7 @@ export function registerSpendingTools(
     },
     { title: "Create Spending", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     async (params: Record<string, unknown>) => {
-      const result = await client.post("/spending", params);
+      const result = await client.post("/spendings", params);
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     },
   );
@@ -92,7 +96,7 @@ export function registerSpendingTools(
     { title: "Update Spending", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     async (params: { spending_id: number; [key: string]: unknown }) => {
       const { spending_id, ...body } = params;
-      const result = await client.put(`/spending/${spending_id}`, body);
+      const result = await client.put(`/spendings/${spending_id}`, body);
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     },
   );
@@ -105,7 +109,7 @@ export function registerSpendingTools(
     },
     { title: "Delete Spending", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
     async ({ spending_id }: { spending_id: number }) => {
-      await client.delete(`/spending/${spending_id}`);
+      await client.delete(`/spendings/${spending_id}`);
       return { content: [{ type: "text" as const, text: `Költség ${spending_id} sikeresen törölve.` }] };
     },
   );
