@@ -89,6 +89,13 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
+## Tool mode (read-only by default in this fork)
+
+Set `BILLINGO_MCP_MODE` in the server's `env`:
+
+- `readonly` (default): only tools annotated `readOnlyHint: true` are registered (list/get/download). Create, update, delete, cancel and send tools are not exposed at all. `get_document_public_url` is also excluded.
+- `full`: all tools.
+
 ## Usage Examples
 
 Once configured, you can ask your AI assistant:

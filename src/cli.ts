@@ -11,6 +11,7 @@ import { registerSpendingTools } from "./tools/spending.js";
 import { registerDocumentExportTools } from "./tools/document-export.js";
 import { registerOrganizationTools } from "./tools/organization.js";
 import { registerUtilTools } from "./tools/utils.js";
+import { applyToolPolicy, resolveToolMode } from "./tool-policy.js";
 
 const apiKey = process.env.BILLINGO_API_KEY;
 if (!apiKey) {
@@ -27,6 +28,9 @@ const server = new McpServer({
   websiteUrl: "https://github.com/Szotasz/billingo-mcp",
 });
 
+const mode = resolveToolMode(process.env.BILLINGO_MCP_MODE);
+const skipped = applyToolPolicy(server, mode);
+
 registerDocumentTools(server, client);
 registerPartnerTools(server, client);
 registerProductTools(server, client);
@@ -38,7 +42,9 @@ registerUtilTools(server, client);
 
 const transport = new StdioServerTransport();
 server.connect(transport).then(() => {
-  console.error("Billingo MCP server running on stdio");
+  console.error(
+    `Billingo MCP server running on stdio (mode: ${mode}, ${skipped.length} write tools disabled)`,
+  );
 }).catch((error) => {
   console.error("Fatal error:", error);
   process.exit(1);

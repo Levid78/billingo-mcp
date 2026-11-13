@@ -9,9 +9,11 @@ import { registerSpendingTools } from "./tools/spending.js";
 import { registerDocumentExportTools } from "./tools/document-export.js";
 import { registerOrganizationTools } from "./tools/organization.js";
 import { registerUtilTools } from "./tools/utils.js";
+import { applyToolPolicy, resolveToolMode } from "./tool-policy.js";
 
 export const configSchema = z.object({
   BILLINGO_API_KEY: z.string().describe("Billingo API v3 key (get it from app.billingo.hu/api-key)"),
+  BILLINGO_MCP_MODE: z.enum(["readonly", "full"]).optional().describe("readonly (default): only read tools are exposed; full: all tools"),
 });
 
 type SmitheryConfig = z.infer<typeof configSchema>;
@@ -31,6 +33,8 @@ export default function createServer({ config }: { config: Partial<SmitheryConfi
   });
 
   const client = new BillingoClient(getApiKey(config));
+
+  applyToolPolicy(server, resolveToolMode(config?.BILLINGO_MCP_MODE || process.env.BILLINGO_MCP_MODE));
 
   registerDocumentTools(server, client);
   registerPartnerTools(server, client);
